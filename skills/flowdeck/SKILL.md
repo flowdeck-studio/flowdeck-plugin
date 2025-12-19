@@ -38,8 +38,14 @@ Returns:
 
 ### Build, Run, Test
 ```bash
-# Build
+# Build for iOS Simulator
 flowdeck build --workspace  --simulator "iPhone 16"
+
+# Build for macOS
+flowdeck build --workspace  --device "My Mac"
+
+# Build for physical iOS device
+flowdeck build --workspace  --device "iPhone"
 
 # Build + Launch + Get App ID
 flowdeck run --workspace  --simulator "iPhone 16"
@@ -48,9 +54,12 @@ flowdeck run --workspace  --simulator "iPhone 16"
 flowdeck test --workspace  --simulator "iPhone 16"
 ```
 
-All commands require `--workspace` and `--simulator`. Get both from `flowdeck context --json`.
+All commands require `--workspace` and a target (`--simulator` or `--device`). Get workspace from `flowdeck context --json`.
 
-For macOS apps: `--simulator none`
+**Target options:**
+- `-S, --simulator "iPhone 16"` → iOS Simulator
+- `-D, --device "My Mac"` → macOS native
+- `-D, --device "iPhone"` → Physical iOS device (partial name match)
 
 ### See What's Running
 ```bash
@@ -104,13 +113,16 @@ Get simulator UDID from `flowdeck simulator list --json`.
 | You Need To... | Command |
 |----------------|---------|
 | Understand the project | `flowdeck context --json` |
-| Build and verify | `flowdeck build --workspace <ws> --simulator "..."` |
-| Run and observe | `flowdeck run --workspace <ws> --simulator "..."` |
+| Build (iOS Simulator) | `flowdeck build -w <ws> -S "iPhone 16"` |
+| Build (macOS) | `flowdeck build -w <ws> -D "My Mac"` |
+| Build (physical device) | `flowdeck build -w <ws> -D "iPhone"` |
+| Run and observe | `flowdeck run -w <ws> -S "iPhone 16"` |
 | See runtime logs | `flowdeck apps` then `flowdeck logs <id>` |
 | See the screen | `flowdeck simulator screenshot <udid>` |
-| Run tests | `flowdeck test --workspace <ws> --simulator "..."` |
+| Run tests | `flowdeck test -w <ws> -S "iPhone 16"` |
 | Find specific tests | `flowdeck test discover --ws <ws> --sch <scheme>` |
 | List simulators | `flowdeck simulator list --json` |
+| List physical devices | `flowdeck device list --json` |
 | Create a simulator | `flowdeck simulator create --name "..." --device-type "..." --runtime "..."` |
 | Clean builds | `flowdeck clean` |
 
@@ -119,7 +131,7 @@ Get simulator UDID from `flowdeck simulator list --json`.
 ## CRITICAL RULES
 
 1. **Always start with `flowdeck context --json`** — It gives you workspace, schemes, simulators
-2. **Always pass explicit parameters** — `--workspace` and `--simulator` on every build/run/test
+2. **Always specify target** — Use `-S` for simulator, `-D` for device/macOS on every build/run/test
 3. **Use `flowdeck run` to launch apps** — It returns an App ID for log streaming
 4. **Use screenshots liberally** — They're your only way to see the UI
 5. **Check `flowdeck apps` before launching** — Know what's already running
@@ -197,19 +209,25 @@ Builds an Xcode project or workspace for the specified target platform.
 
 ```bash
 # Build for iOS Simulator
-flowdeck build --workspace App.xcworkspace --simulator "iPhone 16"
+flowdeck build -w App.xcworkspace -S "iPhone 16"
 
-# Build for macOS (native)
-flowdeck build --workspace App.xcworkspace --simulator none
+# Build for macOS
+flowdeck build -w App.xcworkspace -D "My Mac"
+
+# Build for physical iOS device (by name - partial match)
+flowdeck build -w App.xcworkspace -D "iPhone"
+
+# Build for physical iOS device (by UDID)
+flowdeck build -w App.xcworkspace -D "00008130-001245110C08001C"
 
 # Build with specific scheme
-flowdeck build --workspace App.xcworkspace --simulator "iPhone 16" --scheme MyApp-iOS
+flowdeck build -w App.xcworkspace -S "iPhone 16" -s MyApp-iOS
 
 # Build Release configuration
-flowdeck build --workspace App.xcworkspace --simulator none --configuration Release
+flowdeck build -w App.xcworkspace -D "My Mac" -C Release
 
 # Build with JSON output (for automation)
-flowdeck build --workspace App.xcworkspace --simulator "iPhone 16" --json
+flowdeck build -w App.xcworkspace -S "iPhone 16" -j
 
 # Load config from file
 flowdeck build --config /path/to/config.json
@@ -218,14 +236,17 @@ flowdeck build --config /path/to/config.json
 **Options:**
 | Option | Description |
 |--------|-------------|
-| `--workspace <path>` | Path to .xcworkspace or .xcodeproj (REQUIRED) |
-| `--simulator <name>` | Simulator name/UDID, or 'none' for macOS (REQUIRED) |
-| `--scheme <name>` | Scheme name (auto-detected if only one) |
-| `--configuration <name>` | Build configuration (Debug/Release) |
-| `--derived-data-path <path>` | Custom derived data path |
-| `--json` | Output JSON events |
-| `--verbose` | Show build output in console |
-| `--config <path>` | Path to state file to load configuration from |
+| `-w, --workspace <path>` | Path to .xcworkspace or .xcodeproj (REQUIRED) |
+| `-S, --simulator <name>` | Simulator name or UDID (for iOS Simulator) |
+| `-D, --device <name>` | Device name, UDID, or "My Mac" (for physical devices/macOS) |
+| `-s, --scheme <name>` | Scheme name (auto-detected if only one) |
+| `-C, --configuration <name>` | Build configuration (Debug/Release) |
+| `-d, --derived-data-path <path>` | Custom derived data path |
+| `-j, --json` | Output JSON events |
+| `-v, --verbose` | Show build output in console |
+| `-c, --config <path>` | Path to state file to load configuration from |
+
+**Note:** Either `--simulator` or `--device` is required.
 
 ---
 
@@ -235,34 +256,40 @@ Builds and launches an app on iOS Simulator, physical device, or macOS.
 
 ```bash
 # Run on iOS Simulator
-flowdeck run --workspace App.xcworkspace --simulator "iPhone 16"
+flowdeck run -w App.xcworkspace -S "iPhone 16"
 
-# Run on macOS (native)
-flowdeck run --workspace App.xcworkspace --simulator none
+# Run on macOS
+flowdeck run -w App.xcworkspace -D "My Mac"
+
+# Run on physical iOS device
+flowdeck run -w App.xcworkspace -D "iPhone"
 
 # Run with log streaming (see print() and OSLog output)
-flowdeck run --workspace App.xcworkspace --simulator "iPhone 16" --log
+flowdeck run -w App.xcworkspace -S "iPhone 16" --log
 
 # Interactive mode (R=rebuild, C=clean+rebuild, Q=quit)
-flowdeck run --workspace App.xcworkspace --simulator "iPhone 16" -i
+flowdeck run -w App.xcworkspace -S "iPhone 16" -i
 
 # Wait for debugger attachment
-flowdeck run --workspace App.xcworkspace --simulator "iPhone 16" --wait-for-debugger
+flowdeck run -w App.xcworkspace -S "iPhone 16" --wait-for-debugger
 ```
 
 **Options:**
 | Option | Description |
 |--------|-------------|
-| `--workspace <path>` | Path to .xcworkspace or .xcodeproj (REQUIRED) |
-| `--simulator <name>` | Simulator name/UDID, or 'none' for macOS (REQUIRED) |
-| `--scheme <name>` | Scheme name (auto-detected if only one) |
-| `--configuration <name>` | Build configuration (Debug/Release) |
-| `--log` | Stream logs after launch (print statements + OSLog) |
+| `-w, --workspace <path>` | Path to .xcworkspace or .xcodeproj (REQUIRED) |
+| `-S, --simulator <name>` | Simulator name or UDID (for iOS Simulator) |
+| `-D, --device <name>` | Device name, UDID, or "My Mac" (for physical devices/macOS) |
+| `-s, --scheme <name>` | Scheme name (auto-detected if only one) |
+| `-C, --configuration <name>` | Build configuration (Debug/Release) |
+| `-l, --log` | Stream logs after launch (print statements + OSLog) |
 | `--wait-for-debugger` | Wait for debugger to attach before app starts |
 | `-i, --interactive` | Interactive mode: R to rebuild, C to clean+rebuild, Q to quit |
-| `--json` | Output JSON events |
-| `--verbose` | Show app console output |
-| `--config <path>` | Path to state file to load configuration from |
+| `-j, --json` | Output JSON events |
+| `-v, --verbose` | Show app console output |
+| `-c, --config <path>` | Path to state file to load configuration from |
+
+**Note:** Either `--simulator` or `--device` is required.
 
 **After Launching:**
 When the app launches, you'll get an App ID. Use it to:
@@ -278,25 +305,25 @@ Runs unit tests and UI tests for an Xcode project or workspace.
 
 ```bash
 # Run all tests on iOS Simulator
-flowdeck test --workspace App.xcworkspace --simulator "iPhone 16"
+flowdeck test -w App.xcworkspace -S "iPhone 16"
 
 # Run all tests on macOS
-flowdeck test --workspace App.xcworkspace --simulator none
+flowdeck test -w App.xcworkspace -D "My Mac"
 
 # Run specific test class
-flowdeck test --workspace App.xcworkspace --simulator "iPhone 16" --only LoginTests
+flowdeck test -w App.xcworkspace -S "iPhone 16" --only LoginTests
 
 # Run specific test method
-flowdeck test --workspace App.xcworkspace --simulator "iPhone 16" --only testLogin
+flowdeck test -w App.xcworkspace -S "iPhone 16" --only testLogin
 
 # Skip slow tests
-flowdeck test --workspace App.xcworkspace --simulator "iPhone 16" --skip MyAppTests/SlowIntegrationTests
+flowdeck test -w App.xcworkspace -S "iPhone 16" --skip MyAppTests/SlowIntegrationTests
 
 # Show test results as they complete
-flowdeck test --workspace App.xcworkspace --simulator "iPhone 16" --progress
+flowdeck test -w App.xcworkspace -S "iPhone 16" --progress
 
 # Verbose output with beautified xcodebuild output
-flowdeck test --workspace App.xcworkspace --simulator "iPhone 16" --verbose
+flowdeck test -w App.xcworkspace -S "iPhone 16" --verbose
 ```
 
 **Options:**
@@ -304,7 +331,8 @@ flowdeck test --workspace App.xcworkspace --simulator "iPhone 16" --verbose
 |--------|-------------|
 | `-w, --workspace <path>` | Path to .xcworkspace or .xcodeproj (REQUIRED) |
 | `-s, --scheme <name>` | Scheme name (auto-detected if only one) |
-| `--simulator <name>` | Simulator name/UDID, or 'none' for macOS (REQUIRED) |
+| `-S, --simulator <name>` | Simulator name or UDID (for iOS Simulator) |
+| `-D, --device <name>` | Device name, UDID, or "My Mac" (for physical devices/macOS) |
 | `--configuration <name>` | Build configuration (Debug/Release) |
 | `--only <tests>` | Run only specific tests (format: TargetName/ClassName or TargetName/ClassName/testMethod) |
 | `--skip <tests>` | Skip specific tests (format: TargetName/ClassName or TargetName/ClassName/testMethod) |
@@ -654,31 +682,6 @@ flowdeck simulator prune
 | `--json` | Output as JSON |
 | `--verbose` | Show verbose output |
 
-#### simulator select
-
-Interactively select a simulator to use for build/run operations.
-
-```bash
-# Interactive selection
-flowdeck simulator select
-
-# Select by name
-flowdeck simulator select --name "iPhone 16"
-
-# Select by UDID
-flowdeck simulator select --udid <udid>
-
-# Filter to specific platform
-flowdeck simulator select --platform tvOS
-```
-
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `--platform <platform>` | Filter by platform (iOS, tvOS, watchOS, visionOS) |
-| `--name <name>` | Select simulator by name (non-interactive) |
-| `--udid <udid>` | Select simulator by UDID (non-interactive) |
-
 #### simulator runtimes
 
 Lists all simulator runtimes installed on your system.
@@ -727,24 +730,6 @@ flowdeck device list --json
 | `--platform <platform>` | Filter by platform: iOS, iPadOS, watchOS, tvOS, visionOS |
 | `--available-only` | Show only available devices |
 | `--json` | Output as JSON |
-
-#### device select
-
-Interactively select a physical device to use for build/run operations.
-
-```bash
-# Interactive selection
-flowdeck device select
-
-# Filter to iOS devices only
-flowdeck device select --platform iOS
-```
-
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `--platform <platform>` | Filter by platform |
-| `--project <path>` | Project directory |
 
 #### device install
 
@@ -940,11 +925,14 @@ flowdeck update
 ### Step 1: Launch the App
 
 ```bash
-# For iOS (get workspace from 'flowdeck context --json')
-flowdeck run --workspace App.xcworkspace --simulator "iPhone 16"
+# For iOS Simulator (get workspace from 'flowdeck context --json')
+flowdeck run -w App.xcworkspace -S "iPhone 16"
 
 # For macOS
-flowdeck run --workspace App.xcworkspace --simulator none
+flowdeck run -w App.xcworkspace -D "My Mac"
+
+# For physical iOS device
+flowdeck run -w App.xcworkspace -D "iPhone"
 ```
 
 This builds, installs, and launches the app. Note the **App ID** returned.
@@ -1119,9 +1107,10 @@ If you see "LICENSE REQUIRED", "trial expired", or similar:
 
 | Error | Solution |
 |-------|----------|
-| "Missing required parameter: --simulator" | Add `--simulator "iPhone 16"` or `--simulator none` |
-| "Missing required parameter: --workspace" | Add `--workspace App.xcworkspace` (get path from `flowdeck context --json`) |
+| "Missing required target" | Add `-S "iPhone 16"` for simulator, `-D "My Mac"` for macOS, or `-D "iPhone"` for device |
+| "Missing required parameter: --workspace" | Add `-w App.xcworkspace` (get path from `flowdeck context --json`) |
 | "Simulator not found" | Run `flowdeck simulator list` to get valid names |
+| "Device not found" | Run `flowdeck device list` to see connected devices |
 | "Scheme not found" | Run `flowdeck context --json` to list schemes |
 | "License required" | User must activate at flowdeck.studio/pricing |
 | "App not found" | Run `flowdeck apps` to list running apps |
