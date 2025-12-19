@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "flowdeck",
-      "source": ".",
+      "source": "./",
       "description": "iOS/macOS development & debugging. FlowDeck replaces xcodebuild, xcrun simctl, and xcrun devicectl.",
       "version": "1.1.4",
       "author": {
