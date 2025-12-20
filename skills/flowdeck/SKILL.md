@@ -39,22 +39,22 @@ Returns:
 ### Build, Run, Test
 ```bash
 # Build for iOS Simulator
-flowdeck build --workspace  --simulator "iPhone 16"
+flowdeck build -w <workspace> -s <scheme> -S "iPhone 16"
 
 # Build for macOS
-flowdeck build --workspace  --device "My Mac"
+flowdeck build -w <workspace> -s <scheme> -D "My Mac"
 
 # Build for physical iOS device
-flowdeck build --workspace  --device "iPhone"
+flowdeck build -w <workspace> -s <scheme> -D "iPhone"
 
 # Build + Launch + Get App ID
-flowdeck run --workspace  --simulator "iPhone 16"
+flowdeck run -w <workspace> -s <scheme> -S "iPhone 16"
 
 # Run Tests
-flowdeck test --workspace  --simulator "iPhone 16"
+flowdeck test -w <workspace> -s <scheme> -S "iPhone 16"
 ```
 
-All commands require `--workspace` and a target (`--simulator` or `--device`). Get workspace from `flowdeck context --json`.
+All commands require `--workspace` (`-w`), `--scheme` (`-s`), and a target (`--simulator`/`-S` or `--device`/`-D`). Get workspace and schemes from `flowdeck context --json`.
 
 **Target options:**
 - `-S, --simulator "iPhone 16"` → iOS Simulator
@@ -113,18 +113,18 @@ Get simulator UDID from `flowdeck simulator list --json`.
 | You Need To... | Command |
 |----------------|---------|
 | Understand the project | `flowdeck context --json` |
-| Build (iOS Simulator) | `flowdeck build -w <ws> -S "iPhone 16"` |
-| Build (macOS) | `flowdeck build -w <ws> -D "My Mac"` |
-| Build (physical device) | `flowdeck build -w <ws> -D "iPhone"` |
-| Run and observe | `flowdeck run -w <ws> -S "iPhone 16"` |
+| Build (iOS Simulator) | `flowdeck build -w <ws> -s <scheme> -S "iPhone 16"` |
+| Build (macOS) | `flowdeck build -w <ws> -s <scheme> -D "My Mac"` |
+| Build (physical device) | `flowdeck build -w <ws> -s <scheme> -D "iPhone"` |
+| Run and observe | `flowdeck run -w <ws> -s <scheme> -S "iPhone 16"` |
 | See runtime logs | `flowdeck apps` then `flowdeck logs <id>` |
 | See the screen | `flowdeck simulator screenshot <udid>` |
-| Run tests | `flowdeck test -w <ws> -S "iPhone 16"` |
+| Run tests | `flowdeck test -w <ws> -s <scheme> -S "iPhone 16"` |
 | Find specific tests | `flowdeck test discover --ws <ws> --sch <scheme>` |
 | List simulators | `flowdeck simulator list --json` |
 | List physical devices | `flowdeck device list --json` |
 | Create a simulator | `flowdeck simulator create --name "..." --device-type "..." --runtime "..."` |
-| Clean builds | `flowdeck clean` |
+| Clean builds | `flowdeck clean -w <ws> -s <scheme>` |
 
 ---
 
@@ -143,20 +143,20 @@ Get simulator UDID from `flowdeck simulator list --json`.
 
 ### User Reports a Bug
 ```bash
-flowdeck context --json                              # Get workspace, schemes
-flowdeck run --workspace  --simulator "iPhone 16" # Launch app
-flowdeck apps                                        # Get app ID
-flowdeck logs                                # Watch runtime
+flowdeck context --json                                     # Get workspace, schemes
+flowdeck run -w <workspace> -s <scheme> -S "iPhone 16"      # Launch app
+flowdeck apps                                               # Get app ID
+flowdeck logs <app-id>                                      # Watch runtime
 # Ask user to reproduce the bug
-flowdeck simulator screenshot                  # Capture UI state
+flowdeck simulator screenshot <udid>                        # Capture UI state
 # Analyze, fix, repeat
 ```
 
 ### User Says "It's Not Working"
 ```bash
 flowdeck context --json
-flowdeck run --workspace  --simulator "iPhone 16"
-flowdeck simulator screenshot                  # See current state
+flowdeck run -w <workspace> -s <scheme> -S "iPhone 16"
+flowdeck simulator screenshot <udid>                        # See current state
 flowdeck logs                                # See what's happening
 # Now you have data, not guesses
 ```
@@ -165,9 +165,9 @@ flowdeck logs                                # See what's happening
 ```bash
 flowdeck context --json
 # Implement the feature
-flowdeck build --workspace  --simulator "iPhone 16"  # Verify compilation
-flowdeck run --workspace  --simulator "iPhone 16"    # Test it
-flowdeck simulator screenshot                      # Verify UI
+flowdeck build -w <workspace> -s <scheme> -S "iPhone 16"   # Verify compilation
+flowdeck run -w <workspace> -s <scheme> -S "iPhone 16"     # Test it
+flowdeck simulator screenshot <udid>                        # Verify UI
 ```
 
 ---
@@ -209,25 +209,22 @@ Builds an Xcode project or workspace for the specified target platform.
 
 ```bash
 # Build for iOS Simulator
-flowdeck build -w App.xcworkspace -S "iPhone 16"
+flowdeck build -w App.xcworkspace -s MyApp -S "iPhone 16"
 
 # Build for macOS
-flowdeck build -w App.xcworkspace -D "My Mac"
+flowdeck build -w App.xcworkspace -s MyApp -D "My Mac"
 
 # Build for physical iOS device (by name - partial match)
-flowdeck build -w App.xcworkspace -D "iPhone"
+flowdeck build -w App.xcworkspace -s MyApp -D "iPhone"
 
 # Build for physical iOS device (by UDID)
-flowdeck build -w App.xcworkspace -D "00008130-001245110C08001C"
-
-# Build with specific scheme
-flowdeck build -w App.xcworkspace -S "iPhone 16" -s MyApp-iOS
+flowdeck build -w App.xcworkspace -s MyApp -D "00008130-001245110C08001C"
 
 # Build Release configuration
-flowdeck build -w App.xcworkspace -D "My Mac" -C Release
+flowdeck build -w App.xcworkspace -s MyApp -D "My Mac" -C Release
 
 # Build with JSON output (for automation)
-flowdeck build -w App.xcworkspace -S "iPhone 16" -j
+flowdeck build -w App.xcworkspace -s MyApp -S "iPhone 16" -j
 
 # Load config from file
 flowdeck build --config /path/to/config.json
@@ -256,22 +253,22 @@ Builds and launches an app on iOS Simulator, physical device, or macOS.
 
 ```bash
 # Run on iOS Simulator
-flowdeck run -w App.xcworkspace -S "iPhone 16"
+flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16"
 
 # Run on macOS
-flowdeck run -w App.xcworkspace -D "My Mac"
+flowdeck run -w App.xcworkspace -s MyApp -D "My Mac"
 
 # Run on physical iOS device
-flowdeck run -w App.xcworkspace -D "iPhone"
+flowdeck run -w App.xcworkspace -s MyApp -D "iPhone"
 
 # Run with log streaming (see print() and OSLog output)
-flowdeck run -w App.xcworkspace -S "iPhone 16" --log
+flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16" --log
 
 # Interactive mode (R=rebuild, C=clean+rebuild, Q=quit)
-flowdeck run -w App.xcworkspace -S "iPhone 16" -i
+flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16" -i
 
 # Wait for debugger attachment
-flowdeck run -w App.xcworkspace -S "iPhone 16" --wait-for-debugger
+flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16" --wait-for-debugger
 ```
 
 **Options:**
@@ -925,14 +922,14 @@ flowdeck update
 ### Step 1: Launch the App
 
 ```bash
-# For iOS Simulator (get workspace from 'flowdeck context --json')
-flowdeck run -w App.xcworkspace -S "iPhone 16"
+# For iOS Simulator (get workspace and scheme from 'flowdeck context --json')
+flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16"
 
 # For macOS
-flowdeck run -w App.xcworkspace -D "My Mac"
+flowdeck run -w App.xcworkspace -s MyApp -D "My Mac"
 
 # For physical iOS device
-flowdeck run -w App.xcworkspace -D "iPhone"
+flowdeck run -w App.xcworkspace -s MyApp -D "iPhone"
 ```
 
 This builds, installs, and launches the app. Note the **App ID** returned.
@@ -984,7 +981,7 @@ Read the screenshot file to see the current UI state. Compare against:
 
 ```bash
 # After making code changes
-flowdeck run --workspace App.xcworkspace --simulator "iPhone 16"
+flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16"
 
 # Reattach to logs
 flowdeck apps
@@ -999,49 +996,49 @@ Repeat until the issue is resolved.
 
 ### User reports a bug
 ```
-1. flowdeck context --json                           # Get workspace path
-2. flowdeck run --workspace <ws> --simulator "..."   # Launch app
-3. flowdeck apps                                     # Get app ID
-4. flowdeck logs <app-id>                            # Attach to logs
-5. Ask user to reproduce                             # Observe logs
-6. flowdeck simulator screenshot                     # Capture UI state
+1. flowdeck context --json                              # Get workspace and scheme
+2. flowdeck run -w <ws> -s <scheme> -S "..."            # Launch app
+3. flowdeck apps                                        # Get app ID
+4. flowdeck logs <app-id>                               # Attach to logs
+5. Ask user to reproduce                                # Observe logs
+6. flowdeck simulator screenshot                        # Capture UI state
 7. Analyze and fix code
 8. Repeat from step 2
 ```
 
 ### User asks to add a feature
 ```
-1. flowdeck context --json                           # Get workspace path
-2. Implement the feature                             # Write code
-3. flowdeck build --workspace <ws> --simulator "..." # Verify it compiles
-4. flowdeck run --workspace <ws> --simulator "..."   # Launch and test
-5. flowdeck simulator screenshot                     # Verify UI
-6. flowdeck apps + logs                              # Check for errors
+1. flowdeck context --json                              # Get workspace and scheme
+2. Implement the feature                                # Write code
+3. flowdeck build -w <ws> -s <scheme> -S "..."          # Verify it compiles
+4. flowdeck run -w <ws> -s <scheme> -S "..."            # Launch and test
+5. flowdeck simulator screenshot                        # Verify UI
+6. flowdeck apps + logs                                 # Check for errors
 ```
 
 ### User says "it's not working"
 ```
-1. flowdeck context --json                           # Get workspace path
-2. flowdeck run --workspace <ws> --simulator "..."   # Run it yourself
-3. flowdeck apps                                     # Get app ID
-4. flowdeck logs <app-id>                            # Watch what happens
-5. flowdeck simulator screenshot                     # See the UI
-6. Ask user what they expected                       # Compare
+1. flowdeck context --json                              # Get workspace and scheme
+2. flowdeck run -w <ws> -s <scheme> -S "..."            # Run it yourself
+3. flowdeck apps                                        # Get app ID
+4. flowdeck logs <app-id>                               # Watch what happens
+5. flowdeck simulator screenshot                        # See the UI
+6. Ask user what they expected                          # Compare
 ```
 
 ### User provides a screenshot of an issue
 ```
-1. flowdeck context --json                           # Get workspace path
-2. flowdeck run --workspace <ws> --simulator "..."   # Run the app
-3. flowdeck simulator screenshot                     # Capture current state
-4. Compare screenshots                               # Identify differences
-5. flowdeck logs <app-id>                            # Check for related errors
+1. flowdeck context --json                              # Get workspace and scheme
+2. flowdeck run -w <ws> -s <scheme> -S "..."            # Run the app
+3. flowdeck simulator screenshot                        # Capture current state
+4. Compare screenshots                                  # Identify differences
+5. flowdeck logs <app-id>                               # Check for related errors
 ```
 
 ### App crashes on launch
 ```
-1. flowdeck context --json                                  # Get workspace path
-2. flowdeck run --workspace <ws> --simulator "..." --log    # Use --log to capture startup
+1. flowdeck context --json                              # Get workspace and scheme
+2. flowdeck run -w <ws> -s <scheme> -S "..." --log      # Use --log to capture startup
 3. Read the crash/error logs
 4. Fix the issue
 5. Rebuild and test
@@ -1056,9 +1053,9 @@ Repeat until the issue is resolved.
 Pass all parameters explicitly on each command:
 
 ```bash
-flowdeck build --workspace App.xcworkspace --simulator "iPhone 16" --scheme "MyApp-iOS"
-flowdeck run --workspace App.xcworkspace --simulator "iPhone 16" --scheme "MyApp-iOS"
-flowdeck test --workspace App.xcworkspace --simulator "iPhone 16" --scheme "MyApp-iOS"
+flowdeck build -w App.xcworkspace -s MyApp -S "iPhone 16"
+flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16"
+flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16"
 ```
 
 ### For Repeated Configurations: Use --config
@@ -1124,9 +1121,9 @@ If you see "LICENSE REQUIRED", "trial expired", or similar:
 All commands support `--json` for programmatic parsing:
 ```bash
 flowdeck context --json
-flowdeck build --workspace App.xcworkspace --simulator "iPhone 16" --json
+flowdeck build -w App.xcworkspace -s MyApp -S "iPhone 16" --json
 flowdeck simulator list --json
-flowdeck test --workspace App.xcworkspace --simulator "iPhone 16" --json
+flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --json
 flowdeck apps --json
 flowdeck device list --json
 flowdeck scheme list --workspace App.xcworkspace --json
