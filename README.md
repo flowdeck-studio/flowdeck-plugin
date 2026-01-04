@@ -19,15 +19,6 @@ See [flowdeck.studio](https://flowdeck.studio) for more details.
 
 ## Installation
 
-### Option 1: Add Marketplace (Recommended)
-
-```
-/plugin marketplace add flowdeck-studio/flowdeck-plugin
-/plugin install flowdeck@flowdeck-studio-flowdeck-plugin
-```
-
-### Option 2: Direct Install
-
 ```
 /plugin install https://github.com/flowdeck-studio/flowdeck-plugin
 ```

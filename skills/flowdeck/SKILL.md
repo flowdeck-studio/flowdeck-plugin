@@ -1,6 +1,6 @@
 ---
 name: flowdeck
-version: 1.4.3
+version: 1.5.0
 description: FlowDeck is your iOS/macOS development interface. It provides everything you need: project discovery, building, running, testing, log streaming, and screenshots. One tool, complete visibility.
 ---
 
