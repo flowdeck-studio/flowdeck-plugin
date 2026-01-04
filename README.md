@@ -19,8 +19,14 @@ See [flowdeck.studio](https://flowdeck.studio) for more details.
 
 ## Installation
 
+1. Add the marketplace:
 ```
-/plugin install https://github.com/flowdeck-studio/flowdeck-plugin
+/plugin marketplace add flowdeck-studio/flowdeck-plugin
+```
+
+2. Install the plugin:
+```
+/plugin install flowdeck@flowdeck-plugins
 ```
 
 ## What Gets Installed
