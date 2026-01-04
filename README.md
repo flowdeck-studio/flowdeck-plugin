@@ -26,7 +26,7 @@ See [flowdeck.studio](https://flowdeck.studio) for more details.
 
 2. Install the plugin:
 ```
-/plugin install flowdeck@flowdeck-plugins/flowdeck
+/plugin install flowdeck@flowdeck-plugins
 ```
 
 ## What Gets Installed
