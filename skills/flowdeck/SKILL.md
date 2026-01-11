@@ -44,8 +44,9 @@ flowdeck init -w <workspace> -s <scheme> -S "iPhone 16"
 # After init, these work without parameters:
 flowdeck build
 flowdeck run
-flowdeck test
+flowdeck test run
 ```
+**Note:** `flowdeck test` is an alias for `flowdeck test run`.
 
 ### Build, Run, Test
 ```bash
@@ -55,6 +56,9 @@ flowdeck build -w <workspace> -s <scheme> -S "iPhone 16"
 # Build for macOS
 flowdeck build -w <workspace> -s <scheme> -D "My Mac"
 
+# Build for Mac Catalyst (if supported by the scheme)
+flowdeck build -w <workspace> -s <scheme> -D "My Mac Catalyst"
+
 # Build for physical iOS device
 flowdeck build -w <workspace> -s <scheme> -D "iPhone"
 
@@ -62,7 +66,7 @@ flowdeck build -w <workspace> -s <scheme> -D "iPhone"
 flowdeck run -w <workspace> -s <scheme> -S "iPhone 16"
 
 # Run Tests
-flowdeck test -w <workspace> -s <scheme> -S "iPhone 16"
+flowdeck test run -w <workspace> -s <scheme> -S "iPhone 16"
 ```
 
 All commands require `--workspace` (`-w`), `--scheme` (`-s`), and a target (`--simulator`/`-S` or `--device`/`-D`) unless you've run `flowdeck init`.
@@ -70,6 +74,7 @@ All commands require `--workspace` (`-w`), `--scheme` (`-s`), and a target (`--s
 **Target options:**
 - `-S, --simulator "iPhone 16"` - iOS Simulator
 - `-D, --device "My Mac"` - macOS native
+- `-D, --device "My Mac Catalyst"` - Mac Catalyst (iOS app on Mac, if scheme supports it)
 - `-D, --device "iPhone"` - Physical iOS device (partial name match)
 
 ### See What's Running
@@ -132,8 +137,8 @@ Get simulator UDID from `flowdeck simulator list --json`.
 | Run with logs | `flowdeck run -w <ws> -s <scheme> -S "iPhone 16" --log` |
 | See runtime logs | `flowdeck apps` then `flowdeck logs <id>` |
 | See the screen | `flowdeck simulator screenshot` |
-| Run tests | `flowdeck test -w <ws> -s <scheme> -S "iPhone 16"` |
-| Run specific tests | `flowdeck test -w <ws> -s <scheme> -S "iPhone 16" --only LoginTests` |
+| Run tests | `flowdeck test run -w <ws> -s <scheme> -S "iPhone 16"` |
+| Run specific tests | `flowdeck test run -w <ws> -s <scheme> -S "iPhone 16" --only LoginTests` |
 | Find specific tests | `flowdeck test discover -w <ws> -s <scheme>` |
 | List simulators | `flowdeck simulator list --json` |
 | List physical devices | `flowdeck device list --json` |
@@ -147,7 +152,7 @@ Get simulator UDID from `flowdeck simulator list --json`.
 | Resolve SPM packages | `flowdeck project packages resolve -w <ws>` |
 | Update SPM packages | `flowdeck project packages update -w <ws>` |
 | Clear package cache | `flowdeck project packages clear` |
-| Refresh provisioning | `flowdeck project update-provisioning -w <ws> -s <scheme>` |
+| Refresh provisioning | `flowdeck project sync-profiles -w <ws> -s <scheme>` |
 
 ---
 
@@ -159,6 +164,8 @@ Get simulator UDID from `flowdeck simulator list --json`.
 4. **Use screenshots liberally** - They're your only way to see the UI
 5. **Check `flowdeck apps` before launching** - Know what's already running
 6. **On license errors, STOP** - Tell user to visit flowdeck.studio/pricing
+
+**Tip:** Most commands support `--examples` to print usage examples.
 
 ---
 
@@ -231,13 +238,13 @@ flowdeck init -w App.xcworkspace -s MyApp -S "iPhone 16" --json
 | `-S, --simulator <name>` | Simulator name or UDID |
 | `-D, --device <name>` | Device name or UDID (use 'My Mac' for macOS) |
 | `-f, --force` | Re-initialize even if already configured |
-| `-j, --json` | Output as JSON |
+| `--json` | Output as JSON |
 
 **After init, use simplified commands:**
 ```bash
 flowdeck build                # Uses saved settings
 flowdeck run                  # Uses saved settings
-flowdeck test                 # Uses saved settings
+flowdeck test run             # Uses saved settings (alias: flowdeck test)
 ```
 
 ---
@@ -261,7 +268,7 @@ flowdeck context --project /path/to/project
 | Option | Description |
 |--------|-------------|
 | `-p, --project <path>` | Project directory |
-| `-j, --json` | Output as JSON |
+| `--json` | Output as JSON |
 
 **Returns:**
 - Workspace path (needed for --workspace parameter)
@@ -281,6 +288,9 @@ flowdeck build -w App.xcworkspace -s MyApp -S "iPhone 16"
 
 # Build for macOS
 flowdeck build -w App.xcworkspace -s MyApp -D "My Mac"
+
+# Build for Mac Catalyst (if supported by the scheme)
+flowdeck build -w App.xcworkspace -s MyApp -D "My Mac Catalyst"
 
 # Build for physical iOS device (by name - partial match)
 flowdeck build -w App.xcworkspace -s MyApp -D "iPhone"
@@ -314,8 +324,8 @@ flowdeck build --config /path/to/config.json
 | `-p, --project <path>` | Project directory |
 | `-w, --workspace <path>` | Path to .xcworkspace or .xcodeproj (REQUIRED unless init was run) |
 | `-s, --scheme <name>` | Scheme name (auto-detected if only one) |
-| `-S, --simulator <name>` | Simulator name or UDID (for iOS Simulator) |
-| `-D, --device <name>` | Device name, UDID, or "My Mac" (for physical devices/macOS) |
+| `-S, --simulator <name>` | Simulator name or UDID (required for iOS/tvOS/watchOS) |
+| `-D, --device <name>` | Device name/UDID, or "My Mac"/"My Mac Catalyst" for macOS |
 | `-C, --configuration <name>` | Build configuration (Debug/Release) |
 | `-d, --derived-data-path <path>` | Custom derived data path |
 | `--xcodebuild-options <args>` | Extra xcodebuild arguments (use = for values starting with -) |
@@ -324,7 +334,7 @@ flowdeck build --config /path/to/config.json
 | `-j, --json` | Output JSON events |
 | `-v, --verbose` | Show build output in console |
 
-**Note:** Either `--simulator` or `--device` is required unless you've run `flowdeck init`.
+**Note:** Either `--simulator` or `--device` is required unless you've run `flowdeck init`. Use `--device "My Mac"` for native macOS, or `--device "My Mac Catalyst"` for Catalyst if the scheme supports it.
 
 ---
 
@@ -338,6 +348,9 @@ flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16"
 
 # Run on macOS
 flowdeck run -w App.xcworkspace -s MyApp -D "My Mac"
+
+# Run on Mac Catalyst (if supported by the scheme)
+flowdeck run -w App.xcworkspace -s MyApp -D "My Mac Catalyst"
 
 # Run on physical iOS device
 flowdeck run -w App.xcworkspace -s MyApp -D "iPhone"
@@ -367,8 +380,8 @@ flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-env='CI=tru
 | `-p, --project <path>` | Project directory |
 | `-w, --workspace <path>` | Path to .xcworkspace or .xcodeproj (REQUIRED unless init was run) |
 | `-s, --scheme <name>` | Scheme name (auto-detected if only one) |
-| `-S, --simulator <name>` | Simulator name or UDID (for iOS Simulator) |
-| `-D, --device <name>` | Device name, UDID, or "My Mac" (for physical devices/macOS) |
+| `-S, --simulator <name>` | Simulator name or UDID (required for iOS/tvOS/watchOS) |
+| `-D, --device <name>` | Device name/UDID, or "My Mac"/"My Mac Catalyst" for macOS |
 | `-C, --configuration <name>` | Build configuration (Debug/Release) |
 | `-d, --derived-data-path <path>` | Custom derived data path |
 | `-l, --log` | Stream logs after launch (print statements + OSLog) |
@@ -381,7 +394,7 @@ flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-env='CI=tru
 | `-j, --json` | Output JSON events |
 | `-v, --verbose` | Show app console output |
 
-**Note:** Either `--simulator` or `--device` is required unless you've run `flowdeck init`.
+**Note:** Either `--simulator` or `--device` is required unless you've run `flowdeck init`. Use `--device "My Mac"` for native macOS, or `--device "My Mac Catalyst"` for Catalyst if the scheme supports it.
 
 **After Launching:**
 When the app launches, you'll get an App ID. Use it to:
@@ -391,48 +404,51 @@ When the app launches, you'll get an App ID. Use it to:
 
 ---
 
-### test - Run Tests
+### test / test run - Run Tests
 
-Runs unit tests and UI tests for an Xcode project or workspace.
+Runs unit tests and UI tests for an Xcode project or workspace. `flowdeck test` is an alias for `flowdeck test run`.
 
 ```bash
 # Run all tests on iOS Simulator
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16"
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16"
 
 # Run all tests on macOS
-flowdeck test -w App.xcworkspace -s MyApp -S none
+flowdeck test run -w App.xcworkspace -s MyApp -D "My Mac"
 
 # Run specific test class
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --only MyAppTests/LoginTests
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --only MyAppTests/LoginTests
 
 # Run specific test method
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --only MyAppTests/LoginTests/testLogin
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --only MyAppTests/LoginTests/testLogin
+
+# Run specific test cases (comma-separated)
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --test-cases "MyAppTests/LoginTests/testLogin,MyAppTests/SignupTests/testSignup"
 
 # Skip slow tests
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --skip MyAppTests/SlowIntegrationTests
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --skip MyAppTests/SlowIntegrationTests
 
 # Run specific test targets
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --test-targets "UnitTests,IntegrationTests"
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --test-targets "UnitTests,IntegrationTests"
 
 # Show test results as they complete
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --progress
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --progress
 
 # Clean output for file capture
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --streaming
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --streaming
 
 # JSON output for CI/automation
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --json
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --json
 
 # Verbose output with xcodebuild output
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --verbose
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --verbose
 
 # Pass xcodebuild options (coverage, parallel testing, etc.)
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-options='-enableCodeCoverage YES'
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-options='-parallel-testing-enabled YES'
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-options='-retry-tests-on-failure'
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-options='-enableCodeCoverage YES'
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-options='-parallel-testing-enabled YES'
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-options='-retry-tests-on-failure'
 
 # Pass xcodebuild environment variables
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-env='CI=true'
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-env='CI=true'
 ```
 
 **Options:**
@@ -441,13 +457,14 @@ flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --xcodebuild-env='CI=tr
 | `-p, --project <path>` | Project directory |
 | `-w, --workspace <path>` | Path to .xcworkspace or .xcodeproj (REQUIRED unless init was run) |
 | `-s, --scheme <name>` | Scheme name (auto-detected if only one) |
-| `-S, --simulator <name>` | Simulator name or UDID, or 'none' for macOS |
-| `-D, --device <name>` | Device name, UDID, or "My Mac" |
+| `-S, --simulator <name>` | Simulator name/UDID (required for iOS/tvOS/watchOS) |
+| `-D, --device <name>` | Device name/UDID (use "My Mac" for macOS) |
 | `-C, --configuration <name>` | Build configuration (Debug/Release) |
 | `-d, --derived-data-path <path>` | Custom derived data path |
-| `--only <tests>` | Run only specific tests (format: TargetName/ClassName or TargetName/ClassName/testMethod) |
-| `--skip <tests>` | Skip specific tests |
 | `--test-targets <targets>` | Specific test targets to run (comma-separated) |
+| `--test-cases <cases>` | Specific test cases to run (comma-separated, format: Target/Class/testMethod) |
+| `--only <tests>` | Run only specific tests (format: Target/Class or Target/Class/testMethod) |
+| `--skip <tests>` | Skip specific tests (format: Target/Class or Target/Class/testMethod) |
 | `--progress` | Show test results as they complete (pass/fail per test) |
 | `--streaming` | Stream clean formatted test results (no escape codes) |
 | `--xcodebuild-options <args>` | Extra xcodebuild arguments |
@@ -461,6 +478,8 @@ The `--only` option supports:
 - Full path: `MyAppTests/LoginTests/testValidLogin`
 - Class name: `LoginTests` (runs all tests in that class)
 - Method name: `testValidLogin` (runs all tests with that method name)
+
+The `--test-cases` option accepts a comma-separated list of full identifiers.
 
 ---
 
@@ -477,6 +496,9 @@ flowdeck test discover -w App.xcworkspace -s MyScheme --json
 
 # Filter tests by name
 flowdeck test discover -w App.xcworkspace -s MyScheme --filter Login
+
+# Include tests skipped in the scheme or test plan
+flowdeck test discover -w App.xcworkspace -s MyScheme --include-skipped-tests
 ```
 
 **Options:**
@@ -488,6 +510,7 @@ flowdeck test discover -w App.xcworkspace -s MyScheme --filter Login
 | `-F, --filter <name>` | Filter tests by name (case-insensitive) |
 | `-c, --config <path>` | Path to JSON config file |
 | `-j, --json` | Output as JSON |
+| `--include-skipped-tests` | Include tests marked as skipped in the scheme/test plan |
 
 ---
 
@@ -575,7 +598,7 @@ flowdeck apps --json
 
 ### logs - Stream Real-time Logs
 
-Streams print() statements and OSLog messages from a running app. Press Ctrl+C to stop streaming (the app keeps running).
+Streams print() statements and OSLog messages from a running app. Alias: `log`. Press Ctrl+C to stop streaming (the app keeps running).
 
 ```bash
 # Stream logs (use App ID from 'flowdeck apps')
@@ -596,12 +619,14 @@ flowdeck logs abc123 --json
 **Options:**
 | Option | Description |
 |--------|-------------|
-| `-j, --json` | Output as JSON |
+| `--json` | Output as JSON |
 
 **Output Format:**
 - `[console]` - Messages from print() statements
 - `[category]` - Messages from os_log() with category
 - `[subsystem]` - Messages from Logger() with subsystem
+
+**Limitations:** Log streaming is available for simulators and macOS apps. For physical devices, use Console.app.
 
 ---
 
@@ -621,6 +646,12 @@ flowdeck stop --all
 
 # Force kill unresponsive app
 flowdeck stop abc123 --force
+
+# Force kill all running apps
+flowdeck stop --all --force
+
+# JSON output
+flowdeck stop abc123 --json
 ```
 
 **Arguments:**
@@ -673,15 +704,12 @@ Boots a simulator so it's ready to run apps.
 ```bash
 # Boot by UDID
 flowdeck simulator boot <udid>
-
-# Boot by name
-flowdeck simulator boot "iPhone 16"
 ```
 
 **Arguments:**
 | Argument | Description |
 |----------|-------------|
-| `<udid>` | Simulator UDID or name (get from 'flowdeck simulator list') |
+| `<udid>` | Simulator UDID (get from 'flowdeck simulator list') |
 
 **Options:**
 | Option | Description |
@@ -696,15 +724,12 @@ Shuts down a running simulator.
 ```bash
 # Shutdown by UDID
 flowdeck simulator shutdown <udid>
-
-# Shutdown by name
-flowdeck simulator shutdown "iPhone 16"
 ```
 
 **Arguments:**
 | Argument | Description |
 |----------|-------------|
-| `<udid>` | Simulator UDID or name |
+| `<udid>` | Simulator UDID |
 
 **Options:**
 | Option | Description |
@@ -865,7 +890,7 @@ flowdeck simulator device-types --json
 **Options:**
 | Option | Description |
 |--------|-------------|
-| `-j, --json` | Output as JSON |
+| `--json` | Output as JSON |
 
 ---
 
@@ -1093,6 +1118,15 @@ flowdeck project configs -w App.xcworkspace --json
 Manage Swift Package Manager dependencies.
 
 ```bash
+# List installed packages
+flowdeck project packages list -w App.xcworkspace
+
+# Add a package dependency
+flowdeck project packages add https://github.com/owner/repo --kind upToNextMajor --value 1.2.3
+
+# Remove a package dependency
+flowdeck project packages remove https://github.com/owner/repo
+
 # Resolve package dependencies
 flowdeck project packages resolve -w App.xcworkspace
 
@@ -1100,37 +1134,51 @@ flowdeck project packages resolve -w App.xcworkspace
 flowdeck project packages update -w App.xcworkspace
 
 # Clear package cache only
-flowdeck project packages clear
+flowdeck project packages clear -w App.xcworkspace
+
+# Link package products to a target
+flowdeck project packages link https://github.com/owner/repo --target MyApp --products "RepoProduct"
 ```
 
 **Subcommands:**
 | Subcommand | Description |
 |------------|-------------|
+| `list` | List installed Swift packages |
+| `add` | Add a Swift package dependency |
+| `remove` | Remove a Swift package dependency |
 | `resolve` | Resolve package dependencies |
 | `update` | Delete cache and re-resolve packages |
 | `clear` | Clear SourcePackages directory |
+| `link` | Link package products to a target |
 
-**Options (for resolve/update):**
+**Common options (most subcommands):**
 | Option | Description |
 |--------|-------------|
 | `-p, --project <path>` | Project directory |
 | `-w, --workspace <path>` | Path to .xcworkspace or .xcodeproj |
-| `--derived-data-path <path>` | Custom derived data path |
 | `-j, --json` | Output as JSON |
+| `-v, --verbose` | Show detailed output |
+
+**Subcommand-specific options:**
+- `add`: `-k, --kind` (upToNextMajor, upToNextMinor, exact, branch, revision), `-V, --value`
+- `resolve` / `update`: `-s, --scheme`, `--derived-data-path`
+- `clear`: `--derived-data-path`
+- `link`: `-t, --target`, `--products` (comma-separated)
 
 **When to Use:**
 | Problem | Solution |
 |---------|----------|
+| Need to inspect current packages | `flowdeck project packages list` |
 | "Package not found" errors | `flowdeck project packages resolve` |
 | Outdated dependencies | `flowdeck project packages update` |
 | Corrupted package cache | `flowdeck project packages clear` |
 
-#### project update-provisioning
+#### project sync-profiles
 
-Refresh provisioning profiles from Apple Developer Portal.
+Sync provisioning profiles (triggers build with automatic signing).
 
 ```bash
-flowdeck project update-provisioning -w App.xcworkspace -s MyApp
+flowdeck project sync-profiles -w App.xcworkspace -s MyApp
 ```
 
 **Options:**
@@ -1140,6 +1188,7 @@ flowdeck project update-provisioning -w App.xcworkspace -s MyApp
 | `-w, --workspace <path>` | Path to .xcworkspace or .xcodeproj |
 | `-s, --scheme <name>` | Scheme name |
 | `-j, --json` | Output as JSON |
+| `-v, --verbose` | Show detailed xcodebuild output |
 
 ---
 
@@ -1174,7 +1223,7 @@ flowdeck license trial --json
 **Options:**
 | Option | Description |
 |--------|-------------|
-| `-j, --json` | Output as JSON |
+| `--json` | Output as JSON |
 
 **Notes:**
 - You will be prompted to enter your name and email address
@@ -1187,6 +1236,9 @@ Activates your FlowDeck license key on this machine.
 
 ```bash
 flowdeck license activate ABCD1234-EFGH5678-IJKL9012-MNOP3456
+
+# JSON output
+flowdeck license activate ABCD1234-EFGH5678-IJKL9012-MNOP3456 --json
 ```
 
 **Arguments:**
@@ -1202,6 +1254,9 @@ Deactivates your license on this machine, freeing up an activation slot.
 
 ```bash
 flowdeck license deactivate
+
+# JSON output
+flowdeck license deactivate --json
 ```
 
 Use this before moving your license to a different machine.
@@ -1228,6 +1283,34 @@ flowdeck update --json
 |--------|-------------|
 | `--check` | Check for updates without installing |
 | `-j, --json` | Output as JSON |
+
+---
+
+## GLOBAL FLAGS & INTERACTIVE MODE
+
+### Top-level Flags
+
+- `-i, --interactive` - Launch interactive mode (terminal UI with build/run/test shortcuts)
+- `--changelog` - Show release notes
+- `--version` - Show installed version
+
+**Interactive Mode Highlights:**
+- Guided setup on first run (workspace, scheme, target)
+- Status bar with scheme/target/config/app state
+- Shortcuts: `B` build, `R` run, `U` tests, `K` clean, `L` logs, `X` stop app
+- Other keys: `S` scheme, `T` target, `C` configuration, `D` devices, `P` project menu, `Q` quit
+- `W` writes a config file (`.flowdeck/config.json`)
+
+### Legacy Aliases (Hidden from Help)
+
+These still work for compatibility but prefer full commands:
+`ctx` (context), `log` (logs), `sim` (simulator), `dev` (device)
+
+### Environment Variables
+
+- `FLOWDECK_LICENSE_KEY` - License key for CI/CD (avoids machine activation)
+- `DEVELOPER_DIR` - Override Xcode installation path
+- `FLOWDECK_NO_UPDATE_CHECK=1` - Disable update checks
 
 ---
 
@@ -1369,7 +1452,7 @@ Pass all parameters explicitly on each command:
 ```bash
 flowdeck build -w App.xcworkspace -s MyApp -S "iPhone 16"
 flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16"
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16"
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16"
 ```
 
 ### OR: Use init for Repeated Configurations
@@ -1383,7 +1466,7 @@ flowdeck init -w App.xcworkspace -s MyApp -S "iPhone 16"
 # 2. Run commands without parameters
 flowdeck build
 flowdeck run
-flowdeck test
+flowdeck test run
 ```
 
 ### OR: For Config Files
@@ -1395,9 +1478,21 @@ cat > /tmp/flowdeck-config.json << 'EOF'
   "workspace": "App.xcworkspace",
   "scheme": "MyApp-iOS",
   "configuration": "Debug",
-  "simulator": {
-    "name": "iPhone 16",
-    "udid": "..."
+  "platform": "iOS",
+  "version": "18.0",
+  "simulatorUdid": "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
+  "derivedDataPath": "/tmp/DerivedData",
+  "xcodebuild": {
+    "args": ["-enableCodeCoverage", "YES"],
+    "env": {
+      "CI": "true"
+    }
+  },
+  "appLaunch": {
+    "args": ["-SkipOnboarding"],
+    "env": {
+      "DEBUG_MODE": "1"
+    }
   }
 }
 EOF
@@ -1405,11 +1500,56 @@ EOF
 # 2. Use --config to load from file
 flowdeck build --config /tmp/flowdeck-config.json
 flowdeck run --config /tmp/flowdeck-config.json
-flowdeck test --config /tmp/flowdeck-config.json
+flowdeck test run --config /tmp/flowdeck-config.json
 
 # 3. Clean up when done
 rm /tmp/flowdeck-config.json
 ```
+
+**Note:** `workspace` paths in config files are relative to the project root (where you run FlowDeck), not the config file location.
+
+### Local Settings Files (Auto-loaded)
+
+FlowDeck auto-loads local settings files from your project root:
+
+- `.flowdeck/build-settings.json` - xcodebuild args/env for build/run/test
+- `.flowdeck/app-launch-settings.json` - app launch args/env (run only)
+
+`.flowdeck/build-settings.json`
+```json
+{
+  "args": ["-enableCodeCoverage", "YES"],
+  "env": { "CI": "true" }
+}
+```
+
+`.flowdeck/app-launch-settings.json`
+```json
+{
+  "args": ["-SkipOnboarding"],
+  "env": { "API_ENVIRONMENT": "staging" }
+}
+```
+
+### Config Priority
+
+Settings are merged in this order (lowest -> highest):
+1. `--config` JSON file
+2. Local settings files in `.flowdeck/`
+3. CLI flags (`--xcodebuild-options`, `--launch-options`, etc.)
+
+### Target Resolution (Config Files)
+
+When resolving a target from a config file, FlowDeck prioritizes:
+1. `deviceUdid` (physical device)
+2. `simulatorUdid` (exact simulator)
+3. `platform` + `version` (auto-resolve best match)
+4. `platform: "macOS"` (native Mac build)
+
+### Generate Config Files
+
+- Interactive mode: run `flowdeck -i`, configure, then press `W` to export `.flowdeck/config.json`
+- From context: `flowdeck context --json > .flowdeck/config.json`
 
 ---
 
@@ -1424,6 +1564,7 @@ If you see "LICENSE REQUIRED", "trial expired", or similar:
    - Visit https://flowdeck.studio/pricing to purchase
    - Or run `flowdeck license activate <key>` if they have a key
    - Or run `flowdeck license status` to check current status
+   - In CI/CD, set `FLOWDECK_LICENSE_KEY` instead of activating
 
 ---
 
@@ -1431,7 +1572,7 @@ If you see "LICENSE REQUIRED", "trial expired", or similar:
 
 | Error | Solution |
 |-------|----------|
-| "Missing required target" | Add `-S "iPhone 16"` for simulator, `-D "My Mac"` for macOS, or `-D "iPhone"` for device |
+| "Missing required target" | Add `-S "iPhone 16"` for simulator, `-D "My Mac"`/`"My Mac Catalyst"` for macOS, or `-D "iPhone"` for device |
 | "Missing required parameter: --workspace" | Add `-w App.xcworkspace` (get path from `flowdeck context --json`) |
 | "Simulator not found" | Run `flowdeck simulator list` to get valid names |
 | "Device not found" | Run `flowdeck device list` to see connected devices |
@@ -1443,28 +1584,30 @@ If you see "LICENSE REQUIRED", "trial expired", or similar:
 | "Runtime not installed" | Use `flowdeck simulator runtime create iOS <version>` to install |
 | "Package not found" / SPM errors | Run `flowdeck project packages resolve -w <ws>` |
 | Outdated packages | Run `flowdeck project packages update -w <ws>` |
-| "Provisioning profile" errors | Run `flowdeck project update-provisioning -w <ws> -s <scheme>` |
+| "Provisioning profile" errors | Run `flowdeck project sync-profiles -w <ws> -s <scheme>` |
 
 ---
 
 ## JSON OUTPUT
 
-All commands support `--json` or `-j` for programmatic parsing:
+Most commands support `--json` (often `-j`) for programmatic parsing. Common examples:
 ```bash
 flowdeck context --json
 flowdeck build -w App.xcworkspace -s MyApp -S "iPhone 16" --json
 flowdeck run -w App.xcworkspace -s MyApp -S "iPhone 16" --json
-flowdeck test -w App.xcworkspace -s MyApp -S "iPhone 16" --json
+flowdeck test run -w App.xcworkspace -s MyApp -S "iPhone 16" --json
 flowdeck apps --json
 flowdeck simulator list --json
 flowdeck device list --json
 flowdeck project schemes -w App.xcworkspace --json
 flowdeck project configs -w App.xcworkspace --json
 flowdeck project packages resolve -w App.xcworkspace --json
-flowdeck project update-provisioning -w App.xcworkspace -s MyApp --json
+flowdeck project sync-profiles -w App.xcworkspace -s MyApp --json
 flowdeck simulator runtime list --json
 flowdeck license status --json
 ```
+
+**Note:** Some commands (e.g., `flowdeck simulator screenshot`) do not support JSON output.
 
 ---
 
