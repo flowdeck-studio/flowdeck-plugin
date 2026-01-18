@@ -9,7 +9,7 @@
       "name": "flowdeck",
       "source": "./",
       "description": "iOS/macOS development & debugging. FlowDeck replaces xcodebuild, xcrun simctl, and xcrun devicectl with a unified CLI.",
-      "version": "1.5.3",
+      "version": "1.6.0",
       "author": {
         "name": "FlowDeck"
       }
